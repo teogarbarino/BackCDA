@@ -1,15 +1,28 @@
 const router = require("express").Router();
-const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
+const {User, Score} = require("../models/User");
 
 
 router.post("/register",async(req,res)=>{
-    const newUser= new User({
+    const scoreMath = new Score({
+        category: "math",
+        value:[0,0,0,0,0,0,0,0,0,0]
+    })
+    const scoreAnglais = new Score({
+        category: "anglais",
+        value:[0,0,0,0,0,0,0,0,0,0]
+    })
+    const scoreFrancais = new Score({
+        category: "francais",
+        value:[0,0,0,0,0,0,0,0,0,0]
+    })
+    const newUser = new User({
         username: req.body.username,
+        classe: req.body.classe,
         email: req.body.email,
-        password: CryptoJS.AES.encrypt(req.body.password,process.env.PASS_SEC).toString(),
-
+        password: CryptoJS.AES.encrypt(req.body.password, process.env.PASS_SEC).toString(),
+        scores:[scoreMath,scoreAnglais,scoreFrancais]
     });
     try{
         const savedUser=await newUser.save();
@@ -22,41 +35,38 @@ router.post("/register",async(req,res)=>{
 });
 
 //
-router.post("/login",async(req,res)=>{
+router.post("/login", async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.username });
+       
+    
+        if (!user) {
+            return res.status(401).json("Wrong credentials");
+        }
 
-   try{
-    console.log(req.body);
-        const user=await User.findOne({
-            username:req.body.username
-        });!user&&res.status(401).json("wrong credentials")
-
-
-     
-        const hashedPassword=CryptoJS.AES.decrypt(
+        const hashedPassword = CryptoJS.AES.decrypt(
             user.password,
             process.env.PASS_SEC
-            );
+        );
         const Oripassword = hashedPassword.toString(CryptoJS.enc.Utf8);
+        if (Oripassword !== req.body.password) {
+            return res.status(401).json("Wrong credentials!");
+        }
 
-
-        Oripassword !== req.body.password && 
-         res.status(401).json("Wrong credentials!");
-         const accessToken=jwt.sign(
+        const accessToken = jwt.sign(
             {
-                id:user._id,
+                id: user._id,
                 isAdmin: user.isAdmin,
-         },
-         process.env.JWT_SEC,{expiresIn:"3d"}
-         );
-        const{ password, ...others } =user._doc;
-         console.log(others);
-       // res.status(200).json({...others, accessToken});
-       res.status(200).json({accessToken});
-    } 
-   catch(err){
-        console.log(err);
+            },
+            process.env.JWT_SEC,
+            { expiresIn: "3d" }
+        );
+
+        const { password, ...others } = user._doc;
+        res.status(200).json({ ...others, accessToken });
+    } catch (err) {
         res.status(500).json(err);
-   }
-})
+    }
+});
 
 module.exports = router;
