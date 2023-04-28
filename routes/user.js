@@ -3,34 +3,33 @@ const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = requir
 
 const router = require("express").Router();
 
-router.put("/:id",verifyTokenAndAuthorization,async (req,res)=>{
-   if(req.body.password){
-    req.body.password=CryptoJS.AES.encrypt(req.body.password,process.env.PASS_SEC).toString();
-    }
-    try{
-        const updatedUser = await User.findByIdAndUpdate(req.params.id,{
-            $set: req.body
-        },{new:true});
-        res.status(200).json(updatedUser);
-    }
-        catch(err)
-        {
-res.status(500).json(err);
-        }
+router.put('/:username', async (req, res) => {
+  const { username } = req.params;
+  const { email} = req.body;
 
+  try {
+    // Find the user by their username
+    const user = await User.findOne({ username });
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update the user's email and classe fields
+    user.email = email;
+    user.username= username;
+
+    // Save the updated user to the database
+    await user.save();
+
+    // Return the updated user object
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
- 
-router.get("/find/:id",  verifyTokenAndAdmin,async(req,res)=>{
-    try {
-        const user =await User.findByID(req.params.id);
-        const{ password, ...others } =user._doc;
-
- 
-        res.status(200).json(others);
-    }catch(err){
-        res.status(500).json(err);
-    }
-})
 
 
 module.exports=router
