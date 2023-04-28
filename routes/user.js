@@ -4,13 +4,12 @@ const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = requir
 const router = require("express").Router();
 
 router.put('/:username', async (req, res) => {
-  const { username } = req.params;
-  const { email} = req.body;
 
   try {
     // Find the user by their username
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: req.body.username });
 
+      
     // Check if the user exists
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
