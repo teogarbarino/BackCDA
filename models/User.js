@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// Définition du schéma pour les scores
 const scoreSchema = new mongoose.Schema({
   category: {
     type: String,
@@ -11,6 +12,7 @@ const scoreSchema = new mongoose.Schema({
   },
 });
 
+// Définition du schéma pour les utilisateurs
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -33,10 +35,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       unique: true,
-      required: "Email address is required",
+      required: "L'adresse e-mail est requise",
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please fill a valid email address",
+        "Veuillez fournir une adresse e-mail valide",
       ],
     },
     password: {
@@ -53,6 +55,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Création des modèles User et Score à partir des schémas
 const User = mongoose.model("User", userSchema);
 const Score = mongoose.model("Score", scoreSchema);
 
